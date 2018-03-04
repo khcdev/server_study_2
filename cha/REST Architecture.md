@@ -10,17 +10,19 @@
 *	메세지
 
 ex) HTTP GET 요청 예시
+
 HTTP GET , http://localhost/dogs
-{
+
+	{
 		“dogs: {
 			“name”: “terry”,
 			“like”: “running
 		}
-}
+	}
+
 예제:
 	1. 이름이 “kckc”이고 성별이 남자인 게임 캐릭터를 생성한다.
-	2. 이름이 “kckc”인 게임캐릭터가 장착하고 있는 아이템 리스트를 
-조회한다.
+	2. 이름이 “kckc”인 게임캐릭터가 장착하고 있는 아이템 리스트를 조회한다.
 
 
 ## HTTP 메서드
