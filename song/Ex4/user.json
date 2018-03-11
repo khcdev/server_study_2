@@ -1,0 +1,17 @@
+[
+    {
+        "id": "song",
+        "password": "1234",
+        "email": "s@naver.com"
+    },
+    {
+        "id": "park",
+        "password": "2345",
+        "email": "p@naver.com"
+    },
+    {
+        "id": "kang",
+        "password": "3456",
+        "email": "k@naver.com"
+    }
+]
