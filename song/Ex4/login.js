@@ -17,20 +17,37 @@ app.get('/login',(req, res) => {
     res.send('<h1>Log in Page</h1>');
 });
 
-app.post('/join', (req, res) => {
-    let user = {
-        'userid' : req.body.userid,
-        'userpw' : req.body.userpw,
-        'username' : req.body.username
-    };
+app.get('/login/:id', (req, res) => {
+    var url = req.url;
+    var id = url.split('/')[2];
 
-    var qury = con.query('INSERT INTO SETEST1 SET ?', user, (err, result) => {
+    con.query('SELECT * FROM setest1 WHERE id = ?', [id], (err, rows) => {
+        if (err) throw err;
+
+        console.log('The soultion is: ', rows);
+        res.send(rows);
+    });
+});
+
+app.post('/join', (req, res) => {
+        var userid = req.body.userid;
+        var userpw = req.body.userpw;
+        var username = req.body.username;
+
+        var user={
+            userId : userid,
+            userPw : userpw,
+            userName : username
+        };
+
+
+    var sql = "INSERT INTO setest1 SET ?";
+    con.query(sql, user, (err, result) => {
         if(err){
-            console.error(err);
-            throw err;
+            err.code = 500;
+            res.send(err);
         }
-        console.log(qury);
-        res.send(200, 'success');
+        res.send({msg : 'success'});
     });
 
 });
