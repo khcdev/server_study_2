@@ -1,56 +1,77 @@
 const express = require('express');
-const mysql = require('mysql');
+const dbPool = require('./dbConfig');
+const bodyParser = require('body-parser');
 const app = express();
-const dbconfig={
-    host : 'localhost',
-    user : 'root',
-    password : '1234',
-    database : 'serverTest'
-};
-let con = mysql.createConnection(dbconfig);
+
+app.use(bodyParser.urlencoded({ extended: false }));
 
 app.get('/', (req, res) => {
-    res.send('<h1>Home page</h1>');
+    res.send('success');
 });
 
-app.get('/login',(req, res) => {
-    res.send('<h1>Log in Page</h1>');
-});
+app.post('/login', (req, res) => {
+    res.send('Login Page');
 
-app.get('/login/:id', (req, res) => {
-    var url = req.url;
-    var id = url.split('/')[2];
+    dbPool.getConnection((err, conn) => {
+        if (err) {
+            console.log('err connection : ', err);
+            conn.release();
+            return res.status(400).send('conn err');
+        }
+        let id = req.body.id;
+        let password = req.body.password;
 
-    con.query('SELECT * FROM setest1 WHERE id = ?', [id], (err, rows) => {
-        if (err) throw err;
+        getLoginSql = 'SELECT * FROM setest1 WHERE id = ?';
 
-        console.log('The soultion is: ', rows);
-        res.send(rows);
+        conn.query(getLoginSql, id, (err, query_result) => {
+            if (err) {
+                console.log('query error : ', err);
+                conn.release();
+                return res.status(400).send('conn error');
+            }
+            let data = query_result[0];
+            
+            conn.release();
+            if (data.password == password)
+                console.log('vaild');
+        });
+
     });
+
 });
+
 
 app.post('/join', (req, res) => {
-        var userid = req.body.userid;
-        var userpw = req.body.userpw;
-        var username = req.body.username;
+    if (!req.body) {
+        res.status(400).send('join info invalid');
+    }
 
-        var user={
-            userId : userid,
-            userPw : userpw,
-            userName : username
-        };
-
-
-    var sql = "INSERT INTO setest1 SET ?";
-    con.query(sql, user, (err, result) => {
-        if(err){
-            err.code = 500;
-            res.send(err);
+    dbPool.getConnection((err, conn) => {
+        if (err) {
+            console.log('error connecting : ', err);
+            conn.release();
+            return res.status(400).send('conn error');
         }
-        res.send({msg : 'success'});
+        let id = req.body.id;
+        let password = req.body.password;
+        let email = req.body.email;
+
+        getEmailSql =
+            'select * ' +
+            'from user ' +
+            'where email = ?;';
+        insertAccountSql =
+            'insert user value ' +
+            '(null, ?, ?, ?, null, ?,null);';
+
+        conn.query(getEmailSql, email, (err, result) => {
+            if (err) {
+                conn.release();
+                return res.status(400).send('conn error');
+            }
+        });
+
     });
 
 });
-
 app.listen(3000);
-
