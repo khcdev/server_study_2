@@ -19,7 +19,7 @@ app.post('/login', (req, res, next)=>{
         if(err){
             console.log('err connection : ', err);
             conn.release();
-            next(err);
+            return next(err);
         }
 
         let id = req.body.id;
@@ -31,10 +31,11 @@ app.post('/login', (req, res, next)=>{
             if(err){
                 console.log('err qurey : ', err);
                 conn.release();
-                next(err);
+                return next(err);
             }
 
             let data = query_result[0];
+           
             conn.release();
 
             if(data.password == password){
@@ -62,7 +63,7 @@ app.post('/join', (req, res, next) => {
         if(err){
             console.log('err connection : ', err);
             conn.release();
-            next(err);
+            return next(err);
         }
 
         let id = req.body.id;
@@ -77,7 +78,7 @@ app.post('/join', (req, res, next) => {
             if(err){
                 console.log('err query : ', err);
                 conn.release();
-                next(err);
+                return next(err);
             }
 
             if(query_result.length != 0){
@@ -88,7 +89,7 @@ app.post('/join', (req, res, next) => {
             conn.query(insertQuery, [id, password, email, name, current_datetime], (err, result)=>{
                 if(err){
                     console.log('err insertQuery : ', err);
-                    next(err);
+                    return next(err);
                 }
                 conn.release();
                 responseObject = {
