@@ -2,11 +2,25 @@ const express = require('express');
 const dbPool = require('./dbconfig');
 const bodyParser = require('body-parser');
 const moment = require('moment');
+const multer = require('multer');
 const app = express();
 
 app.use(bodyParser.urlencoded({extended: false}));
-
+app.set('views', './view_file');
+app.set('view engine', 'jade');
 current_datetime = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
+
+var storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'upload/')
+    },
+    filename: (req, file, cb) =>{
+        cb(null, file.originalname)
+    }
+});
+
+console.log('2');
+const upload = multer({dest: 'uploads/',storage: storage});
 
 app.get('/', (req, res) =>{
     res.send('success');
@@ -110,6 +124,16 @@ app.post('/join', (req, res, next) => {
 });
 
 app.use(errHandle);
+
+app.get('/upload', (req, res) => {
+    res.render('upload');
+});
+
+app.post('/upload', upload.single('img'), (req, res) => {
+    console.log('1');
+    res.send('upload : ' + req.file);
+    console.log(req.file);
+});
 
 app.listen(3000, (req, res) =>{
     console.log('Server running... port : 3000');
