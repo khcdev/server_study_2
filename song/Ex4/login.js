@@ -1,56 +1,121 @@
 const express = require('express');
-const mysql = require('mysql');
+const dbPool = require('./dbconfig');
+const bodyParser = require('body-parser');
+const moment = require('moment');
 const app = express();
-const dbconfig={
-    host : 'localhost',
-    user : 'root',
-    password : '1234',
-    database : 'serverTest'
-};
-let con = mysql.createConnection(dbconfig);
 
-app.get('/', (req, res) => {
-    res.send('<h1>Home page</h1>');
+app.use(bodyParser.urlencoded({extended: false}));
+
+current_datetime = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
+
+app.get('/', (req, res) =>{
+    res.send('success');
 });
 
-app.get('/login',(req, res) => {
-    res.send('<h1>Log in Page</h1>');
-});
+app.post('/login', (req, res, next)=>{
+    console.log('login page');
 
-app.get('/login/:id', (req, res) => {
-    var url = req.url;
-    var id = url.split('/')[2];
-
-    con.query('SELECT * FROM setest1 WHERE id = ?', [id], (err, rows) => {
-        if (err) throw err;
-
-        console.log('The soultion is: ', rows);
-        res.send(rows);
-    });
-});
-
-app.post('/join', (req, res) => {
-        var userid = req.body.userid;
-        var userpw = req.body.userpw;
-        var username = req.body.username;
-
-        var user={
-            userId : userid,
-            userPw : userpw,
-            userName : username
-        };
-
-
-    var sql = "INSERT INTO setest1 SET ?";
-    con.query(sql, user, (err, result) => {
+    dbPool.getConnection((err, conn)=>{
         if(err){
-            err.code = 500;
-            res.send(err);
+            console.log('err connection : ', err);
+            conn.release();
+            return next(err);
         }
-        res.send({msg : 'success'});
+
+        let id = req.body.id;
+        let password = req.body.password;
+
+        selectQuery = 'SELECT * FROM setest1 WHERE id = ?;';
+
+        conn.query(selectQuery, id, (err, query_result)=>{
+            if(err){
+                console.log('err qurey : ', err);
+                conn.release();
+                return next(err);
+            }
+
+            let data = query_result[0];
+           
+            conn.release();
+
+            if(data.password == password){
+                console.log('vaild');
+
+                responseObject={
+                    "id" : data.id,
+                    "password" : data.password,
+                    "email" : data.email
+                }
+
+                res.status(200);
+                res.send(responseObject);
+            }
+
+        });
+
+    });
+});
+
+app.post('/join', (req, res, next) => {
+    console.log('join page');
+
+    dbPool.getConnection((err, conn)=>{
+        if(err){
+            console.log('err connection : ', err);
+            conn.release();
+            return next(err);
+        }
+
+        let id = req.body.id;
+        let password = req.body.password;
+        let name = req.body.name;
+        let email = req.body.email;
+
+        selectQuery = 'SELECT * FROM setest1 WHERE id = ?;';
+        insertQuery = 'INSERT setest1 VALUE (?, ?, ?, ?, ?);';
+
+        conn.query(selectQuery, id ,(err, query_result) => {
+            if(err){
+                console.log('err query : ', err);
+                conn.release();
+                return next(err);
+            }
+
+            if(query_result.length != 0){
+                conn.release();
+                res.send(id + ' already exists');
+            }
+
+            conn.query(insertQuery, [id, password, email, name, current_datetime], (err, result)=>{
+                if(err){
+                    console.log('err insertQuery : ', err);
+                    return next(err);
+                }
+                conn.release();
+                responseObject = {
+                    "msg" : "success",
+                    "id" : id,
+                    "password" : password,
+                    "email": email,
+                    "name" : name,
+                    "joinDate" : current_datetime
+                }
+                res.status(200);
+                res.send(responseObject);
+            });
+        });
+        
     });
 
 });
 
-app.listen(3000);
+app.use(errHandle);
 
+app.listen(3000, (req, res) =>{
+    console.log('Server running... port : 3000');
+});
+
+function errHandle(err,req, res, next){
+    res.status(500);
+    res.send('Error occuer');
+}
