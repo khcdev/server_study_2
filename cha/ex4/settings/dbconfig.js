@@ -6,7 +6,7 @@ const dbConfig = {
 	password : 'rhkdgns2',
 	port : 3306,
 	database : 'server_study',
-    connectionLimit:10,
+    connectionLimit:5,
     waitForConnections:false
 };
 

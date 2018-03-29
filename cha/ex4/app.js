@@ -3,29 +3,34 @@ const app = express();
 const bodyParser = require('body-parser');
 const dbPool = require('./settings/dbconfig');
 const moment = require('moment');
+const multer = require('multer');
+const crypto = require('crypto');
 
-app.use(bodyParser.urlencoded({extended: false}));
+const storage = multer.diskStorage({
+    destination: (req, file, callback) => {
+        callback(null, 'uploads/')
+    },
+    filename: (req, file ,callback) => {
+        callback(null, Date.now() + '_' + file.originalname);
+    }
+})
+const imgUploader =  multer({dest:'uploads/', storage: storage, limits: {fileSize: 10 * 1024 * 1024}});
 
-current_datetime = moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
-app.listen(3000, () => {
-    console.log('server is running .. port : 3000')
-});
+app.use('/login',bodyParser.urlencoded({extended: false}));
+app.use('/account',bodyParser.urlencoded({extended: false}));
 
-app.get('/', (req,res) => {
-    return {msg: hi};
-});
+function current_datetime(){
+    return moment(Date.now()).format('YYYY-MM-DD HH:mm:ss');
+} 
 
-app.post('/login', (req,res) =>{
+app.post('/login', (req, res, next) =>{
     if (!req.body){
         res.status(400).send('login info invalid');
     }
 
-    dbPool.getConnection(function(err, conn) {
-        if (err) {
-            console.log('error connecting : ', err);
-            conn.release();
-            return res.status(400).send('conn error');
-        }
+    dbPool.getConnection((err, conn) => {
+        if (err) return next(err);
+        
         let email = req.body.email;
         let password = req.body.password;
 
@@ -34,17 +39,20 @@ app.post('/login', (req,res) =>{
         'from user ' +
         'where email = ?;';
 
-        conn.query(getLoginInfoSql, email, function(err, query_result){
+        conn.query(getLoginInfoSql, email, (err, query_result) => {
             if (err) {
-                console.log('query error : ', err);
                 conn.release();
-                return res.status(400).send('conn error');
+                return next(err);
             }
             let data = query_result[0];
 
-            conn.release();
-            if (data.password == password) console.log('valid');
             
+            if (data.password == password){
+                console.log('valid');
+                //let cookie = 
+            } 
+            
+            conn.release();
             responseObjenct = {
                 "msg": "success",
                 "last_login": data.last_login
@@ -55,16 +63,14 @@ app.post('/login', (req,res) =>{
 
 });
 
-app.post('/account', (req,res) =>{
+app.post('/account', (req,res, next) =>{
     if (!req.body){
         res.status(400).send('login info invalid');
     }
 
     dbPool.getConnection(function(err, conn){
         if (err) {
-            console.log('error connecting : ', err);
-            conn.release();
-            return res.status(400).send('conn error');
+            return next(err);
         }
         let email = req.body.email;
         let password =  req.body.password;
@@ -85,7 +91,7 @@ app.post('/account', (req,res) =>{
             if (result.length == 0){
                 conn.query(
                 insertAccountSql,
-                [email, password, name, current_datetime],
+                [email, password, name, current_datetime()],
                 function(err,result){
                     if (err){
                         conn.release();
@@ -103,11 +109,25 @@ app.post('/account', (req,res) =>{
             }
             else{
                 conn.release();
-                return res.status(400).send('email already exist');
+                res.status(400).send('email already exist');
             }
             
         });
         
         
     });
+});
+
+app.post('/image', imgUploader.single('img'), (req,res) => {
+    console.log(req.file);
+    res.status(200).send('img')
+});
+
+app.use((err, req, res, next)=>{
+    console.error(err)
+    res.status(500).send('error occured');
+});
+
+app.listen(3000, () => {
+    console.log('server is running .. port : 3000')
 });
