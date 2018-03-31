@@ -37,7 +37,7 @@ app.get('/nidlogin', (req, res) => {
     res.render('login');
 });
 
-app.post('/login', (req, res, next) => {
+app.post('/login', upload.single('avatar'), (req, res, next) => {
     console.log('success login');
 
     dbPool.getConnection((err, conn) => {
@@ -62,6 +62,9 @@ app.post('/login', (req, res, next) => {
 
             let data = qurey_result[0];
 
+            let str = data.id + data.password + data.current_datetime + 'song';
+            autoToken = crypto.createHash('sha512').update(str).digest('hex');
+
             conn.release();
 
             if (data.password == password) {
@@ -72,7 +75,9 @@ app.post('/login', (req, res, next) => {
                     'password': data.password,
                     'email': data.email,
                     'name': data.name,
-                    'joindate': data.joindate
+                    'joindate': data.joindate,
+                    'file' : req.file.originalname,
+                    'auto_Token': autoToken
                 }
 
                 res.status(200);
@@ -144,13 +149,6 @@ app.post('/initjoin', (req, res, next) => {
     });
 });
 
-//upload.single('avatar') -> middleare : req.file proprety를 암시해준다.
-//avartar -> file을 받는 변수 명   
-app.post('/profile', upload.single('avatar'), (req, res, next) => {
-
-    console.log('success upload file '+ req.file.filename);
-    res.send(req.file.filename);
-});
 
 app.listen(3000);
 
