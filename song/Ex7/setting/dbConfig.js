@@ -1,15 +1,15 @@
 const mysql = require('mysql');
 
-const dbconfig={
+const dbConfig = {
     host : 'localhost',
     user : 'root',
     password : '1234',
 	port : 3306,
     database : 'serverTest',
-    connectionLimit:3,
+    connectionLimit:10,
     waitForConnections:false
 };
 
-const dbPool = mysql.createPool(dbconfig);
+const dbPool = mysql.createPool(dbConfig);
 
 module.exports = dbPool;
