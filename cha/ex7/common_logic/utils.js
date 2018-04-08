@@ -5,9 +5,7 @@ exports.getDBConnection = () => {
         dbPool.getConnection( (err,conn) => {
             if (err) return reject(err);
             resolve(conn);
+        });
     });
-});
 }
-/*
 
-*/
