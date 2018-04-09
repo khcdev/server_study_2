@@ -6,7 +6,7 @@ const dbconfig={
     password : '1234',
 	port : 3306,
     database : 'serverTest',
-    connectionLimit:10,
+    connectionLimit:3,
     waitForConnections:false
 };
 

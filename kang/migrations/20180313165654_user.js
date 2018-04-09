@@ -11,6 +11,7 @@ exports.up = function(knex) {
             table.increments('id').primary().notNullable();
             table.integer('type').unsigned().notNullable(); // 게시판 타입
             table.string('title', 10).notNullable(); // 제목
+            table.string('password', 30);
             table.string('content').notNullable();
             table.integer('author').unsigned().references('id').inTable('user');
         }),
@@ -18,6 +19,7 @@ exports.up = function(knex) {
             table.increments('id').primary().notNullable();
             table.string('content').notNullable();
             table.integer('board').unsigned().references('id').inTable('board');
+            table.integer('user').unsigned().references('id').inTable('user');
         })
     ]);
 };
